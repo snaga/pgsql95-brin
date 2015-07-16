@@ -1,0 +1,433 @@
+                                                         QUERY PLAN                                                          
+-----------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=175960.78..175962.62 rows=737 width=38)
+   Sort Key: (date_part('year'::text, (orders.o_orderdate)::timestamp without time zone))
+   ->  HashAggregate  (cost=175912.78..175925.68 rows=737 width=38)
+         Group Key: date_part('year'::text, (orders.o_orderdate)::timestamp without time zone)
+         ->  Hash Join  (cost=3938.92..175863.88 rows=2445 width=38)
+               Hash Cond: (supplier.s_nationkey = n2.n_nationkey)
+               ->  Nested Loop  (cost=3937.35..175816.48 rows=2445 width=16)
+                     ->  Hash Join  (cost=3937.07..175051.07 rows=2448 width=16)
+                           Hash Cond: (orders.o_custkey = customer.c_custkey)
+                           ->  Nested Loop  (cost=0.86..171044.48 rows=12241 width=20)
+                                 ->  Nested Loop  (cost=0.43..151860.47 rows=39998 width=16)
+                                       ->  Seq Scan on part  (cost=0.00..6564.00 rows=1333 width=4)
+                                             Filter: ((p_type)::text = 'MEDIUM BURNISHED STEEL'::text)
+                                       ->  Index Scan using i_l_partkey on lineitem  (cost=0.43..108.69 rows=31 width=20)
+                                             Index Cond: (l_partkey = part.p_partkey)
+                                 ->  Index Scan using pk_orders on orders  (cost=0.43..0.47 rows=1 width=12)
+                                       Index Cond: (o_orderkey = lineitem.l_orderkey)
+                                       Filter: ((o_orderdate >= '1995-01-01'::date) AND (o_orderdate <= '1996-12-31'::date))
+                           ->  Hash  (cost=3561.21..3561.21 rows=30000 width=4)
+                                 ->  Nested Loop  (cost=92.02..3561.21 rows=30000 width=4)
+                                       ->  Nested Loop  (cost=0.14..13.95 rows=5 width=4)
+                                             Join Filter: (n1.n_regionkey = region.r_regionkey)
+                                             ->  Index Scan using pk_nation on nation n1  (cost=0.14..12.51 rows=25 width=8)
+                                             ->  Materialize  (cost=0.00..1.07 rows=1 width=4)
+                                                   ->  Seq Scan on region  (cost=0.00..1.06 rows=1 width=4)
+                                                         Filter: (r_name = 'ASIA'::bpchar)
+                                       ->  Bitmap Heap Scan on customer  (cost=91.88..649.45 rows=6000 width=8)
+                                             Recheck Cond: (c_nationkey = n1.n_nationkey)
+                                             ->  Bitmap Index Scan on i_c_nationkey  (cost=0.00..90.38 rows=6000 width=0)
+                                                   Index Cond: (c_nationkey = n1.n_nationkey)
+                     ->  Index Scan using pk_supplier on supplier  (cost=0.29..0.30 rows=1 width=8)
+                           Index Cond: (s_suppkey = lineitem.l_suppkey)
+               ->  Hash  (cost=1.25..1.25 rows=25 width=30)
+                     ->  Seq Scan on nation n2  (cost=0.00..1.25 rows=25 width=30)
+(34 rows)
+
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |  BLKS  | SCAN |   T_READ  |  T_INS  | T_UPD | T_DEL | B_READ |  B_HIT  | VACUUMED |       ANALYZED      | TABLESPACE |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+| 16395 | snaga | public | customer |   3531 |   13 |   1650000 |  150000 |     0 |     0 |   5016 |  114503 |          | 2015-07-16 01:41:13 | pg_default |
+| 16401 | snaga | public | lineitem | 106583 |   20 | 108021870 | 6001215 |     0 |     0 | 211146 | 4901186 |          | 2015-07-16 01:41:14 | pg_default |
+| 16404 | snaga | public | nation   |      1 |   18 |       375 |      25 |     0 |     0 |      1 |   11005 |          | 2015-07-16 01:41:14 | pg_default |
+| 16398 | snaga | public | orders   |  25326 |    9 |  12000000 | 1500000 |     0 |     0 |  48612 |  983363 |          | 2015-07-16 01:41:13 | pg_default |
+| 16389 | snaga | public | part     |   4064 |    2 |    400000 |  200000 |     0 |     0 |   6082 |   43094 |          | 2015-07-16 01:41:13 | pg_default |
+| 16392 | snaga | public | partsupp |  17087 |    4 |   3200000 |  800000 |     0 |     0 |  32200 |  777126 |          | 2015-07-16 01:41:13 | pg_default |
+| 16407 | snaga | public | region   |      1 | 2733 |     13630 |       5 |     0 |     0 |      1 |    2758 |          | 2015-07-16 01:41:14 | pg_default |
+| 16386 | snaga | public | supplier |    218 |   17 |    110000 |   10000 |     0 |     0 |    220 |   15486 |          | 2015-07-16 01:41:12 | pg_default |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |         INDEX         |  BLKS |  SCAN  |  T_READ |  T_FTCH | B_READ |  B_HIT  | STATUS | TABLESPACE |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+| 16416 | snaga | public | customer | pk_customer           |   414 |     60 |      60 |      60 |      6 |     189 |        | pg_default |
+| 16439 | snaga | public | customer | i_c_nationkey         |   414 |     20 |  120788 |       0 |     89 |     314 |        | pg_default |
+| 16446 | snaga | public | lineitem | i_l_commitdate        | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16420 | snaga | public | lineitem | pk_lineitem           | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16426 | snaga | public | lineitem | i_l_shipdate          | 16457 |      9 | 3645585 |       5 |   2497 |    7524 |        | pg_default |
+| 16427 | snaga | public | lineitem | i_l_suppkey_partkey   | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16430 | snaga | public | lineitem | i_l_partkey           | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16434 | snaga | public | lineitem | i_l_suppkey           | 16457 |   3412 | 2021756 | 2021756 |   2246 |   13660 |        | pg_default |
+| 16436 | snaga | public | lineitem | i_l_receiptdate       | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16437 | snaga | public | lineitem | i_l_orderkey          | 16457 | 368420 |  889972 |  889972 |  16401 | 1091649 |        | pg_default |
+| 16438 | snaga | public | lineitem | i_l_orderkey_quantity | 16457 |     60 |      60 |      60 |      6 |     204 |        | pg_default |
+| 16422 | snaga | public | nation   | pk_nation             |     2 |  10988 |   11084 |   11084 |      2 |   11001 |        | pg_default |
+| 16445 | snaga | public | nation   | i_n_regionkey         |     2 |      0 |       0 |       0 |      1 |      14 |        | pg_default |
+| 16440 | snaga | public | orders   | i_o_orderdate         |  4116 |     13 |  915245 |       5 |    632 |    1927 |        | pg_default |
+| 16441 | snaga | public | orders   | i_o_custkey           |  4116 |  48556 |  481176 |  481176 |   3943 |  143245 |        | pg_default |
+| 16418 | snaga | public | orders   | pk_orders             |  4116 |     60 |      60 |      60 |      6 |     194 |        | pg_default |
+| 16412 | snaga | public | part     | pk_part               |   551 |     24 |  800020 |  800020 |    551 |    1710 |        | pg_default |
+| 16443 | snaga | public | partsupp | i_ps_partkey          |  2196 |   2736 |   10884 |   10884 |    456 |    7789 |        | pg_default |
+| 16444 | snaga | public | partsupp | i_ps_suppkey          |  2196 |   7860 |  625640 |  625640 |   1554 |   23715 |        | pg_default |
+| 16414 | snaga | public | partsupp | pk_partsupp           |  2196 |      0 |       0 |       0 |      1 |       4 |        | pg_default |
+| 16424 | snaga | public | region   | pk_region             |     2 |     30 |      30 |      30 |      2 |      38 |        | pg_default |
+| 16410 | snaga | public | supplier | pk_supplier           |    30 |  10948 |   50944 |   50944 |     30 |   22057 |        | pg_default |
+| 16442 | snaga | public | supplier | i_s_nationkey         |    30 |      0 |       0 |       0 |      1 |      14 |        | pg_default |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+Timing is on.
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=175960.78..175962.62 rows=737 width=38) (actual time=290.728..290.728 rows=2 loops=1)
+   Sort Key: (date_part('year'::text, (orders.o_orderdate)::timestamp without time zone))
+   Sort Method: quicksort  Memory: 25kB
+   ->  HashAggregate  (cost=175912.78..175925.68 rows=737 width=38) (actual time=290.706..290.706 rows=2 loops=1)
+         Group Key: date_part('year'::text, (orders.o_orderdate)::timestamp without time zone)
+         ->  Hash Join  (cost=3938.92..175863.88 rows=2445 width=38) (actual time=26.176..289.331 rows=2502 loops=1)
+               Hash Cond: (supplier.s_nationkey = n2.n_nationkey)
+               ->  Nested Loop  (cost=3937.35..175816.48 rows=2445 width=16) (actual time=26.151..288.097 rows=2502 loops=1)
+                     ->  Hash Join  (cost=3937.07..175051.07 rows=2448 width=16) (actual time=26.139..282.875 rows=2502 loops=1)
+                           Hash Cond: (orders.o_custkey = customer.c_custkey)
+                           ->  Nested Loop  (cost=0.86..171044.48 rows=12241 width=20) (actual time=0.189..253.268 rows=12054 loops=1)
+                                 ->  Nested Loop  (cost=0.43..151860.47 rows=39998 width=16) (actual time=0.042..108.767 rows=39388 loops=1)
+                                       ->  Seq Scan on part  (cost=0.00..6564.00 rows=1333 width=4) (actual time=0.021..25.828 rows=1319 loops=1)
+                                             Filter: ((p_type)::text = 'MEDIUM BURNISHED STEEL'::text)
+                                             Rows Removed by Filter: 198681
+                                       ->  Index Scan using i_l_partkey on lineitem  (cost=0.43..108.69 rows=31 width=20) (actual time=0.008..0.059 rows=30 loops=1319)
+                                             Index Cond: (l_partkey = part.p_partkey)
+                                 ->  Index Scan using pk_orders on orders  (cost=0.43..0.47 rows=1 width=12) (actual time=0.003..0.003 rows=0 loops=39388)
+                                       Index Cond: (o_orderkey = lineitem.l_orderkey)
+                                       Filter: ((o_orderdate >= '1995-01-01'::date) AND (o_orderdate <= '1996-12-31'::date))
+                                       Rows Removed by Filter: 1
+                           ->  Hash  (cost=3561.21..3561.21 rows=30000 width=4) (actual time=25.362..25.362 rows=30183 loops=1)
+                                 Buckets: 32768  Batches: 1  Memory Usage: 1318kB
+                                 ->  Nested Loop  (cost=92.02..3561.21 rows=30000 width=4) (actual time=0.908..21.869 rows=30183 loops=1)
+                                       ->  Nested Loop  (cost=0.14..13.95 rows=5 width=4) (actual time=0.013..0.026 rows=5 loops=1)
+                                             Join Filter: (n1.n_regionkey = region.r_regionkey)
+                                             Rows Removed by Join Filter: 20
+                                             ->  Index Scan using pk_nation on nation n1  (cost=0.14..12.51 rows=25 width=8) (actual time=0.002..0.006 rows=25 loops=1)
+                                             ->  Materialize  (cost=0.00..1.07 rows=1 width=4) (actual time=0.000..0.000 rows=1 loops=25)
+                                                   ->  Seq Scan on region  (cost=0.00..1.06 rows=1 width=4) (actual time=0.003..0.004 rows=1 loops=1)
+                                                         Filter: (r_name = 'ASIA'::bpchar)
+                                                         Rows Removed by Filter: 4
+                                       ->  Bitmap Heap Scan on customer  (cost=91.88..649.45 rows=6000 width=8) (actual time=0.840..3.809 rows=6037 loops=5)
+                                             Recheck Cond: (c_nationkey = n1.n_nationkey)
+                                             Heap Blocks: exact=14551
+                                             ->  Bitmap Index Scan on i_c_nationkey  (cost=0.00..90.38 rows=6000 width=0) (actual time=0.540..0.540 rows=6037 loops=5)
+                                                   Index Cond: (c_nationkey = n1.n_nationkey)
+                     ->  Index Scan using pk_supplier on supplier  (cost=0.29..0.30 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=2502)
+                           Index Cond: (s_suppkey = lineitem.l_suppkey)
+               ->  Hash  (cost=1.25..1.25 rows=25 width=30) (actual time=0.009..0.009 rows=25 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                     ->  Seq Scan on nation n2  (cost=0.00..1.25 rows=25 width=30) (actual time=0.002..0.003 rows=25 loops=1)
+ Planning time: 2.034 ms
+ Execution time: 290.886 ms
+(44 rows)
+
+Time: 294.569 ms
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |  BLKS  | SCAN |   T_READ  |  T_INS  | T_UPD | T_DEL | B_READ |  B_HIT  | VACUUMED |       ANALYZED      | TABLESPACE |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+| 16395 | snaga | public | customer |   3531 |   13 |   1650000 |  150000 |     0 |     0 |   5016 |  114503 |          | 2015-07-16 01:41:13 | pg_default |
+| 16401 | snaga | public | lineitem | 106583 |   20 | 108021870 | 6001215 |     0 |     0 | 211146 | 4901186 |          | 2015-07-16 01:41:14 | pg_default |
+| 16404 | snaga | public | nation   |      1 |   18 |       375 |      25 |     0 |     0 |      1 |   11005 |          | 2015-07-16 01:41:14 | pg_default |
+| 16398 | snaga | public | orders   |  25326 |    9 |  12000000 | 1500000 |     0 |     0 |  48612 |  983363 |          | 2015-07-16 01:41:13 | pg_default |
+| 16389 | snaga | public | part     |   4064 |    2 |    400000 |  200000 |     0 |     0 |   6082 |   43094 |          | 2015-07-16 01:41:13 | pg_default |
+| 16392 | snaga | public | partsupp |  17087 |    4 |   3200000 |  800000 |     0 |     0 |  32200 |  777126 |          | 2015-07-16 01:41:13 | pg_default |
+| 16407 | snaga | public | region   |      1 | 2733 |     13630 |       5 |     0 |     0 |      1 |    2758 |          | 2015-07-16 01:41:14 | pg_default |
+| 16386 | snaga | public | supplier |    218 |   17 |    110000 |   10000 |     0 |     0 |    220 |   15486 |          | 2015-07-16 01:41:12 | pg_default |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |         INDEX         |  BLKS |  SCAN  |  T_READ |  T_FTCH | B_READ |  B_HIT  | STATUS | TABLESPACE |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+| 16416 | snaga | public | customer | pk_customer           |   414 |     60 |      60 |      60 |      6 |     189 |        | pg_default |
+| 16439 | snaga | public | customer | i_c_nationkey         |   414 |     20 |  120788 |       0 |     89 |     314 |        | pg_default |
+| 16446 | snaga | public | lineitem | i_l_commitdate        | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16420 | snaga | public | lineitem | pk_lineitem           | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16426 | snaga | public | lineitem | i_l_shipdate          | 16457 |      9 | 3645585 |       5 |   2497 |    7524 |        | pg_default |
+| 16427 | snaga | public | lineitem | i_l_suppkey_partkey   | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16430 | snaga | public | lineitem | i_l_partkey           | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16434 | snaga | public | lineitem | i_l_suppkey           | 16457 |   3412 | 2021756 | 2021756 |   2246 |   13660 |        | pg_default |
+| 16436 | snaga | public | lineitem | i_l_receiptdate       | 16457 |      0 |       0 |       0 |      1 |      29 |        | pg_default |
+| 16437 | snaga | public | lineitem | i_l_orderkey          | 16457 | 368420 |  889972 |  889972 |  16401 | 1091649 |        | pg_default |
+| 16438 | snaga | public | lineitem | i_l_orderkey_quantity | 16457 |     60 |      60 |      60 |      6 |     204 |        | pg_default |
+| 16422 | snaga | public | nation   | pk_nation             |     2 |  10988 |   11084 |   11084 |      2 |   11001 |        | pg_default |
+| 16445 | snaga | public | nation   | i_n_regionkey         |     2 |      0 |       0 |       0 |      1 |      14 |        | pg_default |
+| 16440 | snaga | public | orders   | i_o_orderdate         |  4116 |     13 |  915245 |       5 |    632 |    1927 |        | pg_default |
+| 16441 | snaga | public | orders   | i_o_custkey           |  4116 |  48556 |  481176 |  481176 |   3943 |  143245 |        | pg_default |
+| 16418 | snaga | public | orders   | pk_orders             |  4116 |     60 |      60 |      60 |      6 |     194 |        | pg_default |
+| 16412 | snaga | public | part     | pk_part               |   551 |     24 |  800020 |  800020 |    551 |    1710 |        | pg_default |
+| 16443 | snaga | public | partsupp | i_ps_partkey          |  2196 |   2736 |   10884 |   10884 |    456 |    7789 |        | pg_default |
+| 16444 | snaga | public | partsupp | i_ps_suppkey          |  2196 |   7860 |  625640 |  625640 |   1554 |   23715 |        | pg_default |
+| 16414 | snaga | public | partsupp | pk_partsupp           |  2196 |      0 |       0 |       0 |      1 |       4 |        | pg_default |
+| 16424 | snaga | public | region   | pk_region             |     2 |     30 |      30 |      30 |      2 |      38 |        | pg_default |
+| 16410 | snaga | public | supplier | pk_supplier           |    30 |  10948 |   50944 |   50944 |     30 |   22057 |        | pg_default |
+| 16442 | snaga | public | supplier | i_s_nationkey         |    30 |      0 |       0 |       0 |      1 |      14 |        | pg_default |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+Timing is on.
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=175960.78..175962.62 rows=737 width=38) (actual time=272.348..272.348 rows=2 loops=1)
+   Sort Key: (date_part('year'::text, (orders.o_orderdate)::timestamp without time zone))
+   Sort Method: quicksort  Memory: 25kB
+   ->  HashAggregate  (cost=175912.78..175925.68 rows=737 width=38) (actual time=272.324..272.324 rows=2 loops=1)
+         Group Key: date_part('year'::text, (orders.o_orderdate)::timestamp without time zone)
+         ->  Hash Join  (cost=3938.92..175863.88 rows=2445 width=38) (actual time=27.319..271.018 rows=2502 loops=1)
+               Hash Cond: (supplier.s_nationkey = n2.n_nationkey)
+               ->  Nested Loop  (cost=3937.35..175816.48 rows=2445 width=16) (actual time=27.296..269.940 rows=2502 loops=1)
+                     ->  Hash Join  (cost=3937.07..175051.07 rows=2448 width=16) (actual time=27.286..264.877 rows=2502 loops=1)
+                           Hash Cond: (orders.o_custkey = customer.c_custkey)
+                           ->  Nested Loop  (cost=0.86..171044.48 rows=12241 width=20) (actual time=0.159..234.345 rows=12054 loops=1)
+                                 ->  Nested Loop  (cost=0.43..151860.47 rows=39998 width=16) (actual time=0.039..103.542 rows=39388 loops=1)
+                                       ->  Seq Scan on part  (cost=0.00..6564.00 rows=1333 width=4) (actual time=0.026..25.690 rows=1319 loops=1)
+                                             Filter: ((p_type)::text = 'MEDIUM BURNISHED STEEL'::text)
+                                             Rows Removed by Filter: 198681
+                                       ->  Index Scan using i_l_partkey on lineitem  (cost=0.43..108.69 rows=31 width=20) (actual time=0.005..0.055 rows=30 loops=1319)
+                                             Index Cond: (l_partkey = part.p_partkey)
+                                 ->  Index Scan using pk_orders on orders  (cost=0.43..0.47 rows=1 width=12) (actual time=0.003..0.003 rows=0 loops=39388)
+                                       Index Cond: (o_orderkey = lineitem.l_orderkey)
+                                       Filter: ((o_orderdate >= '1995-01-01'::date) AND (o_orderdate <= '1996-12-31'::date))
+                                       Rows Removed by Filter: 1
+                           ->  Hash  (cost=3561.21..3561.21 rows=30000 width=4) (actual time=26.661..26.661 rows=30183 loops=1)
+                                 Buckets: 32768  Batches: 1  Memory Usage: 1318kB
+                                 ->  Nested Loop  (cost=92.02..3561.21 rows=30000 width=4) (actual time=0.863..23.016 rows=30183 loops=1)
+                                       ->  Nested Loop  (cost=0.14..13.95 rows=5 width=4) (actual time=0.013..0.026 rows=5 loops=1)
+                                             Join Filter: (n1.n_regionkey = region.r_regionkey)
+                                             Rows Removed by Join Filter: 20
+                                             ->  Index Scan using pk_nation on nation n1  (cost=0.14..12.51 rows=25 width=8) (actual time=0.001..0.006 rows=25 loops=1)
+                                             ->  Materialize  (cost=0.00..1.07 rows=1 width=4) (actual time=0.000..0.000 rows=1 loops=25)
+                                                   ->  Seq Scan on region  (cost=0.00..1.06 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=1)
+                                                         Filter: (r_name = 'ASIA'::bpchar)
+                                                         Rows Removed by Filter: 4
+                                       ->  Bitmap Heap Scan on customer  (cost=91.88..649.45 rows=6000 width=8) (actual time=0.784..4.025 rows=6037 loops=5)
+                                             Recheck Cond: (c_nationkey = n1.n_nationkey)
+                                             Heap Blocks: exact=14551
+                                             ->  Bitmap Index Scan on i_c_nationkey  (cost=0.00..90.38 rows=6000 width=0) (actual time=0.485..0.485 rows=6037 loops=5)
+                                                   Index Cond: (c_nationkey = n1.n_nationkey)
+                     ->  Index Scan using pk_supplier on supplier  (cost=0.29..0.30 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=2502)
+                           Index Cond: (s_suppkey = lineitem.l_suppkey)
+               ->  Hash  (cost=1.25..1.25 rows=25 width=30) (actual time=0.010..0.010 rows=25 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                     ->  Seq Scan on nation n2  (cost=0.00..1.25 rows=25 width=30) (actual time=0.002..0.003 rows=25 loops=1)
+ Planning time: 2.086 ms
+ Execution time: 272.495 ms
+(44 rows)
+
+Time: 276.225 ms
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |  BLKS  | SCAN |   T_READ  |  T_INS  | T_UPD | T_DEL | B_READ |  B_HIT  | VACUUMED |       ANALYZED      | TABLESPACE |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+| 16395 | snaga | public | customer |   3531 |   13 |   1650000 |  150000 |     0 |     0 |   5016 |  143617 |          | 2015-07-16 01:41:13 | pg_default |
+| 16401 | snaga | public | lineitem | 106583 |   20 | 108021870 | 6001215 |     0 |     0 | 211146 | 4979992 |          | 2015-07-16 01:41:14 | pg_default |
+| 16404 | snaga | public | nation   |      1 |   21 |       425 |      25 |     0 |     0 |      1 |   11027 |          | 2015-07-16 01:41:14 | pg_default |
+| 16398 | snaga | public | orders   |  25326 |    9 |  12000000 | 1500000 |     0 |     0 |  48612 | 1062163 |          | 2015-07-16 01:41:13 | pg_default |
+| 16389 | snaga | public | part     |   4064 |    5 |    800000 |  200000 |     0 |     0 |   6082 |   51234 |          | 2015-07-16 01:41:13 | pg_default |
+| 16392 | snaga | public | partsupp |  17087 |    4 |   3200000 |  800000 |     0 |     0 |  32200 |  777126 |          | 2015-07-16 01:41:13 | pg_default |
+| 16407 | snaga | public | region   |      1 | 2736 |     13640 |       5 |     0 |     0 |      1 |    2766 |          | 2015-07-16 01:41:14 | pg_default |
+| 16386 | snaga | public | supplier |    218 |   17 |    110000 |   10000 |     0 |     0 |    220 |   20502 |          | 2015-07-16 01:41:12 | pg_default |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |         INDEX         |  BLKS |  SCAN  |  T_READ |  T_FTCH | B_READ |  B_HIT  | STATUS | TABLESPACE |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+| 16416 | snaga | public | customer | pk_customer           |   414 |     72 |      72 |      72 |      6 |     228 |        | pg_default |
+| 16439 | snaga | public | customer | i_c_nationkey         |   414 |     30 |  181154 |       0 |    174 |     430 |        | pg_default |
+| 16446 | snaga | public | lineitem | i_l_commitdate        | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16420 | snaga | public | lineitem | pk_lineitem           | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16426 | snaga | public | lineitem | i_l_shipdate          | 16457 |      9 | 3645585 |       5 |   2497 |    7527 |        | pg_default |
+| 16427 | snaga | public | lineitem | i_l_suppkey_partkey   | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16430 | snaga | public | lineitem | i_l_partkey           | 16457 |   2650 |   78788 |   78788 |   1429 |    6768 |        | pg_default |
+| 16434 | snaga | public | lineitem | i_l_suppkey           | 16457 |   3424 | 2021768 | 2021768 |   2246 |   13699 |        | pg_default |
+| 16436 | snaga | public | lineitem | i_l_receiptdate       | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16437 | snaga | public | lineitem | i_l_orderkey          | 16457 | 368420 |  889972 |  889972 |  16401 | 1091652 |        | pg_default |
+| 16438 | snaga | public | lineitem | i_l_orderkey_quantity | 16457 |     72 |      72 |      72 |      6 |     243 |        | pg_default |
+| 16422 | snaga | public | nation   | pk_nation             |     2 |  11008 |   11152 |   11152 |      2 |   11024 |        | pg_default |
+| 16445 | snaga | public | nation   | i_n_regionkey         |     2 |      0 |       0 |       0 |      1 |      17 |        | pg_default |
+| 16440 | snaga | public | orders   | i_o_orderdate         |  4116 |     13 |  915245 |       5 |    632 |    1930 |        | pg_default |
+| 16441 | snaga | public | orders   | i_o_custkey           |  4116 |  48568 |  481188 |  481188 |   3943 |  143284 |        | pg_default |
+| 16418 | snaga | public | orders   | pk_orders             |  4116 |  78848 |   78848 |   78848 |   4116 |  232883 |        | pg_default |
+| 16412 | snaga | public | part     | pk_part               |   551 |     36 |  800032 |  800032 |    551 |    1749 |        | pg_default |
+| 16443 | snaga | public | partsupp | i_ps_partkey          |  2196 |   2736 |   10884 |   10884 |    456 |    7789 |        | pg_default |
+| 16444 | snaga | public | partsupp | i_ps_suppkey          |  2196 |   7860 |  625640 |  625640 |   1554 |   23715 |        | pg_default |
+| 16414 | snaga | public | partsupp | pk_partsupp           |  2196 |      0 |       0 |       0 |      1 |       4 |        | pg_default |
+| 16424 | snaga | public | region   | pk_region             |     2 |     36 |      36 |      36 |      2 |      47 |        | pg_default |
+| 16410 | snaga | public | supplier | pk_supplier           |    30 |  15964 |   55960 |   55960 |     30 |   32118 |        | pg_default |
+| 16442 | snaga | public | supplier | i_s_nationkey         |    30 |      0 |       0 |       0 |      1 |      17 |        | pg_default |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+Timing is on.
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=175960.78..175962.62 rows=737 width=38) (actual time=268.266..268.266 rows=2 loops=1)
+   Sort Key: (date_part('year'::text, (orders.o_orderdate)::timestamp without time zone))
+   Sort Method: quicksort  Memory: 25kB
+   ->  HashAggregate  (cost=175912.78..175925.68 rows=737 width=38) (actual time=268.245..268.247 rows=2 loops=1)
+         Group Key: date_part('year'::text, (orders.o_orderdate)::timestamp without time zone)
+         ->  Hash Join  (cost=3938.92..175863.88 rows=2445 width=38) (actual time=25.690..266.950 rows=2502 loops=1)
+               Hash Cond: (supplier.s_nationkey = n2.n_nationkey)
+               ->  Nested Loop  (cost=3937.35..175816.48 rows=2445 width=16) (actual time=25.664..265.806 rows=2502 loops=1)
+                     ->  Hash Join  (cost=3937.07..175051.07 rows=2448 width=16) (actual time=25.653..260.878 rows=2502 loops=1)
+                           Hash Cond: (orders.o_custkey = customer.c_custkey)
+                           ->  Nested Loop  (cost=0.86..171044.48 rows=12241 width=20) (actual time=0.149..231.765 rows=12054 loops=1)
+                                 ->  Nested Loop  (cost=0.43..151860.47 rows=39998 width=16) (actual time=0.034..102.568 rows=39388 loops=1)
+                                       ->  Seq Scan on part  (cost=0.00..6564.00 rows=1333 width=4) (actual time=0.022..25.499 rows=1319 loops=1)
+                                             Filter: ((p_type)::text = 'MEDIUM BURNISHED STEEL'::text)
+                                             Rows Removed by Filter: 198681
+                                       ->  Index Scan using i_l_partkey on lineitem  (cost=0.43..108.69 rows=31 width=20) (actual time=0.005..0.054 rows=30 loops=1319)
+                                             Index Cond: (l_partkey = part.p_partkey)
+                                 ->  Index Scan using pk_orders on orders  (cost=0.43..0.47 rows=1 width=12) (actual time=0.003..0.003 rows=0 loops=39388)
+                                       Index Cond: (o_orderkey = lineitem.l_orderkey)
+                                       Filter: ((o_orderdate >= '1995-01-01'::date) AND (o_orderdate <= '1996-12-31'::date))
+                                       Rows Removed by Filter: 1
+                           ->  Hash  (cost=3561.21..3561.21 rows=30000 width=4) (actual time=25.030..25.030 rows=30183 loops=1)
+                                 Buckets: 32768  Batches: 1  Memory Usage: 1318kB
+                                 ->  Nested Loop  (cost=92.02..3561.21 rows=30000 width=4) (actual time=0.856..21.575 rows=30183 loops=1)
+                                       ->  Nested Loop  (cost=0.14..13.95 rows=5 width=4) (actual time=0.012..0.025 rows=5 loops=1)
+                                             Join Filter: (n1.n_regionkey = region.r_regionkey)
+                                             Rows Removed by Join Filter: 20
+                                             ->  Index Scan using pk_nation on nation n1  (cost=0.14..12.51 rows=25 width=8) (actual time=0.001..0.008 rows=25 loops=1)
+                                             ->  Materialize  (cost=0.00..1.07 rows=1 width=4) (actual time=0.000..0.000 rows=1 loops=25)
+                                                   ->  Seq Scan on region  (cost=0.00..1.06 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=1)
+                                                         Filter: (r_name = 'ASIA'::bpchar)
+                                                         Rows Removed by Filter: 4
+                                       ->  Bitmap Heap Scan on customer  (cost=91.88..649.45 rows=6000 width=8) (actual time=0.781..3.750 rows=6037 loops=5)
+                                             Recheck Cond: (c_nationkey = n1.n_nationkey)
+                                             Heap Blocks: exact=14551
+                                             ->  Bitmap Index Scan on i_c_nationkey  (cost=0.00..90.38 rows=6000 width=0) (actual time=0.484..0.484 rows=6037 loops=5)
+                                                   Index Cond: (c_nationkey = n1.n_nationkey)
+                     ->  Index Scan using pk_supplier on supplier  (cost=0.29..0.30 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=2502)
+                           Index Cond: (s_suppkey = lineitem.l_suppkey)
+               ->  Hash  (cost=1.25..1.25 rows=25 width=30) (actual time=0.009..0.009 rows=25 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                     ->  Seq Scan on nation n2  (cost=0.00..1.25 rows=25 width=30) (actual time=0.001..0.004 rows=25 loops=1)
+ Planning time: 2.037 ms
+ Execution time: 268.413 ms
+(44 rows)
+
+Time: 272.040 ms
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |  BLKS  | SCAN |   T_READ  |  T_INS  | T_UPD | T_DEL | B_READ |  B_HIT  | VACUUMED |       ANALYZED      | TABLESPACE |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+| 16395 | snaga | public | customer |   3531 |   13 |   1650000 |  150000 |     0 |     0 |   5016 |  143617 |          | 2015-07-16 01:41:13 | pg_default |
+| 16401 | snaga | public | lineitem | 106583 |   20 | 108021870 | 6001215 |     0 |     0 | 211146 | 4979992 |          | 2015-07-16 01:41:14 | pg_default |
+| 16404 | snaga | public | nation   |      1 |   21 |       425 |      25 |     0 |     0 |      1 |   11027 |          | 2015-07-16 01:41:14 | pg_default |
+| 16398 | snaga | public | orders   |  25326 |    9 |  12000000 | 1500000 |     0 |     0 |  48612 | 1062163 |          | 2015-07-16 01:41:13 | pg_default |
+| 16389 | snaga | public | part     |   4064 |    5 |    800000 |  200000 |     0 |     0 |   6082 |   51234 |          | 2015-07-16 01:41:13 | pg_default |
+| 16392 | snaga | public | partsupp |  17087 |    4 |   3200000 |  800000 |     0 |     0 |  32200 |  777126 |          | 2015-07-16 01:41:13 | pg_default |
+| 16407 | snaga | public | region   |      1 | 2736 |     13640 |       5 |     0 |     0 |      1 |    2766 |          | 2015-07-16 01:41:14 | pg_default |
+| 16386 | snaga | public | supplier |    218 |   17 |    110000 |   10000 |     0 |     0 |    220 |   20502 |          | 2015-07-16 01:41:12 | pg_default |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |         INDEX         |  BLKS |  SCAN  |  T_READ |  T_FTCH | B_READ |  B_HIT  | STATUS | TABLESPACE |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+| 16416 | snaga | public | customer | pk_customer           |   414 |     72 |      72 |      72 |      6 |     228 |        | pg_default |
+| 16439 | snaga | public | customer | i_c_nationkey         |   414 |     30 |  181154 |       0 |    174 |     430 |        | pg_default |
+| 16446 | snaga | public | lineitem | i_l_commitdate        | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16420 | snaga | public | lineitem | pk_lineitem           | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16426 | snaga | public | lineitem | i_l_shipdate          | 16457 |      9 | 3645585 |       5 |   2497 |    7527 |        | pg_default |
+| 16427 | snaga | public | lineitem | i_l_suppkey_partkey   | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16430 | snaga | public | lineitem | i_l_partkey           | 16457 |   2650 |   78788 |   78788 |   1429 |    6768 |        | pg_default |
+| 16434 | snaga | public | lineitem | i_l_suppkey           | 16457 |   3424 | 2021768 | 2021768 |   2246 |   13699 |        | pg_default |
+| 16436 | snaga | public | lineitem | i_l_receiptdate       | 16457 |      0 |       0 |       0 |      1 |      32 |        | pg_default |
+| 16437 | snaga | public | lineitem | i_l_orderkey          | 16457 | 368420 |  889972 |  889972 |  16401 | 1091652 |        | pg_default |
+| 16438 | snaga | public | lineitem | i_l_orderkey_quantity | 16457 |     72 |      72 |      72 |      6 |     243 |        | pg_default |
+| 16422 | snaga | public | nation   | pk_nation             |     2 |  11008 |   11152 |   11152 |      2 |   11024 |        | pg_default |
+| 16445 | snaga | public | nation   | i_n_regionkey         |     2 |      0 |       0 |       0 |      1 |      17 |        | pg_default |
+| 16440 | snaga | public | orders   | i_o_orderdate         |  4116 |     13 |  915245 |       5 |    632 |    1930 |        | pg_default |
+| 16441 | snaga | public | orders   | i_o_custkey           |  4116 |  48568 |  481188 |  481188 |   3943 |  143284 |        | pg_default |
+| 16418 | snaga | public | orders   | pk_orders             |  4116 |  78848 |   78848 |   78848 |   4116 |  232883 |        | pg_default |
+| 16412 | snaga | public | part     | pk_part               |   551 |     36 |  800032 |  800032 |    551 |    1749 |        | pg_default |
+| 16443 | snaga | public | partsupp | i_ps_partkey          |  2196 |   2736 |   10884 |   10884 |    456 |    7789 |        | pg_default |
+| 16444 | snaga | public | partsupp | i_ps_suppkey          |  2196 |   7860 |  625640 |  625640 |   1554 |   23715 |        | pg_default |
+| 16414 | snaga | public | partsupp | pk_partsupp           |  2196 |      0 |       0 |       0 |      1 |       4 |        | pg_default |
+| 16424 | snaga | public | region   | pk_region             |     2 |     36 |      36 |      36 |      2 |      47 |        | pg_default |
+| 16410 | snaga | public | supplier | pk_supplier           |    30 |  15964 |   55960 |   55960 |     30 |   32118 |        | pg_default |
+| 16442 | snaga | public | supplier | i_s_nationkey         |    30 |      0 |       0 |       0 |      1 |      17 |        | pg_default |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+Timing is on.
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=175960.78..175962.62 rows=737 width=38) (actual time=268.116..268.116 rows=2 loops=1)
+   Sort Key: (date_part('year'::text, (orders.o_orderdate)::timestamp without time zone))
+   Sort Method: quicksort  Memory: 25kB
+   ->  HashAggregate  (cost=175912.78..175925.68 rows=737 width=38) (actual time=268.093..268.093 rows=2 loops=1)
+         Group Key: date_part('year'::text, (orders.o_orderdate)::timestamp without time zone)
+         ->  Hash Join  (cost=3938.92..175863.88 rows=2445 width=38) (actual time=25.666..266.764 rows=2502 loops=1)
+               Hash Cond: (supplier.s_nationkey = n2.n_nationkey)
+               ->  Nested Loop  (cost=3937.35..175816.48 rows=2445 width=16) (actual time=25.641..265.645 rows=2502 loops=1)
+                     ->  Hash Join  (cost=3937.07..175051.07 rows=2448 width=16) (actual time=25.630..260.696 rows=2502 loops=1)
+                           Hash Cond: (orders.o_custkey = customer.c_custkey)
+                           ->  Nested Loop  (cost=0.86..171044.48 rows=12241 width=20) (actual time=0.148..231.662 rows=12054 loops=1)
+                                 ->  Nested Loop  (cost=0.43..151860.47 rows=39998 width=16) (actual time=0.034..102.528 rows=39388 loops=1)
+                                       ->  Seq Scan on part  (cost=0.00..6564.00 rows=1333 width=4) (actual time=0.022..25.546 rows=1319 loops=1)
+                                             Filter: ((p_type)::text = 'MEDIUM BURNISHED STEEL'::text)
+                                             Rows Removed by Filter: 198681
+                                       ->  Index Scan using i_l_partkey on lineitem  (cost=0.43..108.69 rows=31 width=20) (actual time=0.005..0.054 rows=30 loops=1319)
+                                             Index Cond: (l_partkey = part.p_partkey)
+                                 ->  Index Scan using pk_orders on orders  (cost=0.43..0.47 rows=1 width=12) (actual time=0.003..0.003 rows=0 loops=39388)
+                                       Index Cond: (o_orderkey = lineitem.l_orderkey)
+                                       Filter: ((o_orderdate >= '1995-01-01'::date) AND (o_orderdate <= '1996-12-31'::date))
+                                       Rows Removed by Filter: 1
+                           ->  Hash  (cost=3561.21..3561.21 rows=30000 width=4) (actual time=25.008..25.008 rows=30183 loops=1)
+                                 Buckets: 32768  Batches: 1  Memory Usage: 1318kB
+                                 ->  Nested Loop  (cost=92.02..3561.21 rows=30000 width=4) (actual time=0.850..21.623 rows=30183 loops=1)
+                                       ->  Nested Loop  (cost=0.14..13.95 rows=5 width=4) (actual time=0.013..0.026 rows=5 loops=1)
+                                             Join Filter: (n1.n_regionkey = region.r_regionkey)
+                                             Rows Removed by Join Filter: 20
+                                             ->  Index Scan using pk_nation on nation n1  (cost=0.14..12.51 rows=25 width=8) (actual time=0.001..0.006 rows=25 loops=1)
+                                             ->  Materialize  (cost=0.00..1.07 rows=1 width=4) (actual time=0.000..0.000 rows=1 loops=25)
+                                                   ->  Seq Scan on region  (cost=0.00..1.06 rows=1 width=4) (actual time=0.004..0.004 rows=1 loops=1)
+                                                         Filter: (r_name = 'ASIA'::bpchar)
+                                                         Rows Removed by Filter: 4
+                                       ->  Bitmap Heap Scan on customer  (cost=91.88..649.45 rows=6000 width=8) (actual time=0.777..3.737 rows=6037 loops=5)
+                                             Recheck Cond: (c_nationkey = n1.n_nationkey)
+                                             Heap Blocks: exact=14551
+                                             ->  Bitmap Index Scan on i_c_nationkey  (cost=0.00..90.38 rows=6000 width=0) (actual time=0.482..0.482 rows=6037 loops=5)
+                                                   Index Cond: (c_nationkey = n1.n_nationkey)
+                     ->  Index Scan using pk_supplier on supplier  (cost=0.29..0.30 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=2502)
+                           Index Cond: (s_suppkey = lineitem.l_suppkey)
+               ->  Hash  (cost=1.25..1.25 rows=25 width=30) (actual time=0.009..0.009 rows=25 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                     ->  Seq Scan on nation n2  (cost=0.00..1.25 rows=25 width=30) (actual time=0.002..0.004 rows=25 loops=1)
+ Planning time: 2.031 ms
+ Execution time: 268.264 ms
+(44 rows)
+
+Time: 271.912 ms
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |  BLKS  | SCAN |   T_READ  |  T_INS  | T_UPD | T_DEL | B_READ |  B_HIT  | VACUUMED |       ANALYZED      | TABLESPACE |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
+| 16395 | snaga | public | customer |   3531 |   13 |   1650000 |  150000 |     0 |     0 |   5016 |  172727 |          | 2015-07-16 01:41:13 | pg_default |
+| 16401 | snaga | public | lineitem | 106583 |   20 | 108021870 | 6001215 |     0 |     0 | 211146 | 5058786 |          | 2015-07-16 01:41:14 | pg_default |
+| 16404 | snaga | public | nation   |      1 |   23 |       475 |      25 |     0 |     0 |      1 |   11043 |          | 2015-07-16 01:41:14 | pg_default |
+| 16398 | snaga | public | orders   |  25326 |    9 |  12000000 | 1500000 |     0 |     0 |  48612 | 1140955 |          | 2015-07-16 01:41:13 | pg_default |
+| 16389 | snaga | public | part     |   4064 |    7 |   1200000 |  200000 |     0 |     0 |   6082 |   59370 |          | 2015-07-16 01:41:13 | pg_default |
+| 16392 | snaga | public | partsupp |  17087 |    4 |   3200000 |  800000 |     0 |     0 |  32200 |  777126 |          | 2015-07-16 01:41:13 | pg_default |
+| 16407 | snaga | public | region   |      1 | 2738 |     13650 |       5 |     0 |     0 |      1 |    2772 |          | 2015-07-16 01:41:14 | pg_default |
+| 16386 | snaga | public | supplier |    218 |   17 |    110000 |   10000 |     0 |     0 |    220 |   25514 |          | 2015-07-16 01:41:12 | pg_default |
++-------+-------+--------+----------+--------+------+-----------+---------+-------+-------+--------+---------+----------+---------------------+------------+
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+|  OID  | OWNER | SCHEMA |  TABLE   |         INDEX         |  BLKS |  SCAN  |  T_READ |  T_FTCH | B_READ |  B_HIT  | STATUS | TABLESPACE |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
+| 16416 | snaga | public | customer | pk_customer           |   414 |     80 |      80 |      80 |      6 |     254 |        | pg_default |
+| 16439 | snaga | public | customer | i_c_nationkey         |   414 |     40 |  241520 |       0 |    174 |     630 |        | pg_default |
+| 16446 | snaga | public | lineitem | i_l_commitdate        | 16457 |      0 |       0 |       0 |      1 |      34 |        | pg_default |
+| 16420 | snaga | public | lineitem | pk_lineitem           | 16457 |      0 |       0 |       0 |      1 |      34 |        | pg_default |
+| 16426 | snaga | public | lineitem | i_l_shipdate          | 16457 |      9 | 3645585 |       5 |   2497 |    7529 |        | pg_default |
+| 16427 | snaga | public | lineitem | i_l_suppkey_partkey   | 16457 |      0 |       0 |       0 |      1 |      34 |        | pg_default |
+| 16430 | snaga | public | lineitem | i_l_partkey           | 16457 |   5296 |  157572 |  157572 |   1429 |   14922 |        | pg_default |
+| 16434 | snaga | public | lineitem | i_l_suppkey           | 16457 |   3432 | 2021776 | 2021776 |   2246 |   13725 |        | pg_default |
+| 16436 | snaga | public | lineitem | i_l_receiptdate       | 16457 |      0 |       0 |       0 |      1 |      34 |        | pg_default |
+| 16437 | snaga | public | lineitem | i_l_orderkey          | 16457 | 368420 |  889972 |  889972 |  16401 | 1091654 |        | pg_default |
+| 16438 | snaga | public | lineitem | i_l_orderkey_quantity | 16457 |     80 |      80 |      80 |      6 |     269 |        | pg_default |
+| 16422 | snaga | public | nation   | pk_nation             |     2 |  11022 |   11214 |   11214 |      2 |   11040 |        | pg_default |
+| 16445 | snaga | public | nation   | i_n_regionkey         |     2 |      0 |       0 |       0 |      1 |      19 |        | pg_default |
+| 16440 | snaga | public | orders   | i_o_orderdate         |  4116 |     13 |  915245 |       5 |    632 |    1932 |        | pg_default |
+| 16441 | snaga | public | orders   | i_o_custkey           |  4116 |  48576 |  481196 |  481196 |   3943 |  143310 |        | pg_default |
+| 16418 | snaga | public | orders   | pk_orders             |  4116 | 157632 |  157632 |  157632 |   4116 |  469669 |        | pg_default |
+| 16412 | snaga | public | part     | pk_part               |   551 |     44 |  800040 |  800040 |    551 |    1775 |        | pg_default |
+| 16443 | snaga | public | partsupp | i_ps_partkey          |  2196 |   2736 |   10884 |   10884 |    456 |    7789 |        | pg_default |
+| 16444 | snaga | public | partsupp | i_ps_suppkey          |  2196 |   7860 |  625640 |  625640 |   1554 |   23715 |        | pg_default |
+| 16414 | snaga | public | partsupp | pk_partsupp           |  2196 |      0 |       0 |       0 |      1 |       4 |        | pg_default |
+| 16424 | snaga | public | region   | pk_region             |     2 |     40 |      40 |      40 |      2 |      53 |        | pg_default |
+| 16410 | snaga | public | supplier | pk_supplier           |    30 |  20976 |   60972 |   60972 |     30 |   42170 |        | pg_default |
+| 16442 | snaga | public | supplier | i_s_nationkey         |    30 |      0 |       0 |       0 |      1 |      19 |        | pg_default |
++-------+-------+--------+----------+-----------------------+-------+--------+---------+---------+--------+---------+--------+------------+
