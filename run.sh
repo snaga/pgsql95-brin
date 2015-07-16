@@ -20,10 +20,28 @@ function run_one()
     echo explain analyze >> tmp.sql
     cat $1 >> tmp.sql
 
+    pt-table-usage -d $DBNAME
+    pt-index-usage -d $DBNAME
+
     psql -f tmp.sql $DBNAME
+
+    pt-table-usage -d $DBNAME
+    pt-index-usage -d $DBNAME
+
     psql -f tmp.sql $DBNAME
+
+    pt-table-usage -d $DBNAME
+    pt-index-usage -d $DBNAME
+
     psql -f tmp.sql $DBNAME
+
+    pt-table-usage -d $DBNAME
+    pt-index-usage -d $DBNAME
+
     psql -f tmp.sql $DBNAME
+
+    pt-table-usage -d $DBNAME
+    pt-index-usage -d $DBNAME
 
     rm -f tmp.sql
 }
