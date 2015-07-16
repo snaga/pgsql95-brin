@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #DBNAME=dbt3_brin
-DBNAME=dbt3
+DBNAME=$1
 
 function run_one()
 {
