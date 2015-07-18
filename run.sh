@@ -15,8 +15,8 @@ function run_one()
 
     psql -f tmp.sql $DBNAME
 
-    echo 'set statement_timeout to 600000;' >> tmp.sql
-    echo '\timing' > tmp.sql
+    echo 'set statement_timeout to 600000;' > tmp.sql
+    echo '\timing' >> tmp.sql
     echo explain analyze >> tmp.sql
     cat $1 >> tmp.sql
 
