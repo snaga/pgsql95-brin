@@ -13,4 +13,7 @@ pt-config --apply -D ./data set maintenance_work_mem 2GB
 pt-config --apply -D ./data set work_mem 2GB
 
 pg_ctl -w -D ./data -l postgres.log start
+
+psql -c 'select name,setting from pg_settings' postgres > pg_settings.log
+
 createdb dbt3
