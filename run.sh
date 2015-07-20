@@ -1,7 +1,13 @@
 #!/bin/sh
 
 #DBNAME=dbt3_brin
-DBNAME=dbt3
+DBNAME=$1
+OUTDIR=$2
+
+if [ -z "$OUTDIR" ]; then
+  echo "Usage: $0 <DBNAME> <OUTDIR>"
+  exit 0
+fi
 
 function run_one()
 {
@@ -70,3 +76,7 @@ run_one queries/19.sql | tee 19.out
 run_one queries/20.sql | tee 20.out
 run_one queries/21.sql | tee 21.out
 run_one queries/22.sql | tee 22.out
+
+mkdir $OUTDIR
+mv *.out $OUTDIR
+
